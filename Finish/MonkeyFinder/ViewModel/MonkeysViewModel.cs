@@ -4,103 +4,109 @@ namespace MonkeyFinder.ViewModel;
 
 public partial class MonkeysViewModel : BaseViewModel
 {
-    public ObservableCollection<Monkey> Monkeys { get; } = new();
-    MonkeyService monkeyService;
-    IConnectivity connectivity;
-    IGeolocation geolocation;
-    public MonkeysViewModel(MonkeyService monkeyService, IConnectivity connectivity, IGeolocation geolocation)
-    {
-        Title = "Monkey Finder";
-        this.monkeyService = monkeyService;
-        this.connectivity = connectivity;
-        this.geolocation = geolocation;
-    }
-    
-    [RelayCommand]
-    async Task GoToDetails(Monkey monkey)
-    {
-        if (monkey == null)
-        return;
+	public ObservableCollection<Monkey> Monkeys { get; } = new();
+	MonkeyService monkeyService;
+	IConnectivity connectivity;
+	IGeolocation geolocation;
+	IShellService shellService;
 
-        await Shell.Current.GoToAsync(nameof(DetailsPage), true, new Dictionary<string, object>
-        {
-            {"Monkey", monkey }
-        });
-    }
+	public MonkeysViewModel(MonkeyService monkeyService,
+							IConnectivity connectivity,
+							IGeolocation geolocation,
+							IShellService shellService)
+	{
+		Title = "Monkey Finder";
+		this.monkeyService = monkeyService;
+		this.connectivity = connectivity;
+		this.geolocation = geolocation;
+		this.shellService = shellService;
+	}
 
-    [ObservableProperty]
-    bool isRefreshing;
+	[RelayCommand]
+	async Task GoToDetails(Monkey monkey)
+	{
+		if (monkey == null)
+			return;
 
-    [RelayCommand]
-    async Task GetMonkeysAsync()
-    {
-        if (IsBusy)
-            return;
+		await this.shellService.GoToAsync<DetailsPage>("Monkey", monkey);
+	}
 
-        try
-        {
-            if (connectivity.NetworkAccess != NetworkAccess.Internet)
-            {
-                await Shell.Current.DisplayAlert("No connectivity!",
-                    $"Please check internet and try again.", "OK");
-                return;
-            }
+	[ObservableProperty]
+	bool isRefreshing;
 
-            IsBusy = true;
-            var monkeys = await monkeyService.GetMonkeys();
+	/// <summary>
+	/// GetMonkeysCommand
+	/// </summary>
+	/// <returns></returns>
+	[RelayCommand]
+	async Task GetMonkeysAsync()
+	{
+		if (IsBusy)
+			return;
 
-            if(Monkeys.Count != 0)
-                Monkeys.Clear();
+		try
+		{
+			if (connectivity.NetworkAccess != NetworkAccess.Internet)
+			{
+				await shellService.ShowMessage("No connectivity!",
+					$"Please check internet and try again.", "OK");
+				return;
+			}
 
-            foreach(var monkey in monkeys)
-                Monkeys.Add(monkey);
+			IsBusy = true;
+			var monkeys = await monkeyService.GetMonkeys();
 
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Unable to get monkeys: {ex.Message}");
-            await Shell.Current.DisplayAlert("Error!", ex.Message, "OK");
-        }
-        finally
-        {
-            IsBusy = false;
-            IsRefreshing = false;
-        }
+			if (Monkeys.Count != 0)
+				Monkeys.Clear();
 
-    }
+			foreach (var monkey in monkeys)
+				Monkeys.Add(monkey);
 
-    [RelayCommand]
-    async Task GetClosestMonkey()
-    {
-        if (IsBusy || Monkeys.Count == 0)
-            return;
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Unable to get monkeys: {ex.Message}");
+			await shellService.ShowMessage("Error!", ex.Message, "OK");
+		}
+		finally
+		{
+			IsBusy = false;
+			IsRefreshing = false;
+		}
 
-        try
-        {
-            // Get cached location, else get real location.
-            var location = await geolocation.GetLastKnownLocationAsync();
-            if (location == null)
-            {
-                location = await geolocation.GetLocationAsync(new GeolocationRequest
-                {
-                    DesiredAccuracy = GeolocationAccuracy.Medium,
-                    Timeout = TimeSpan.FromSeconds(30)
-                });
-            }
+	}
 
-            // Find closest monkey to us
-            var first = Monkeys.OrderBy(m => location.CalculateDistance(
-                new Location(m.Latitude, m.Longitude), DistanceUnits.Miles))
-                .FirstOrDefault();
+	[RelayCommand]
+	async Task GetClosestMonkey()
+	{
+		if (IsBusy || Monkeys.Count == 0)
+			return;
 
-            await Shell.Current.DisplayAlert("", first.Name + " " +
-                first.Location, "OK");
+		try
+		{
+			// Get cached location, else get real location.
+			var location = await geolocation.GetLastKnownLocationAsync();
+			if (location == null)
+			{
+				location = await geolocation.GetLocationAsync(new GeolocationRequest
+				{
+					DesiredAccuracy = GeolocationAccuracy.Medium,
+					Timeout = TimeSpan.FromSeconds(30)
+				});
+			}
 
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Unable to query location: {ex.Message}");
-            await Shell.Current.DisplayAlert("Error!", ex.Message, "OK");
-        }
-    }
+			// Find closest monkey to us
+			var first = Monkeys.OrderBy(m => location.CalculateDistance(
+				new Location(m.Latitude, m.Longitude), DistanceUnits.Miles))
+				.FirstOrDefault();
+
+			await shellService.ShowMessage("", first.Name + " " + first.Location, "OK");
+
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine($"Unable to query location: {ex.Message}");
+			await shellService.ShowMessage("Error!", ex.Message, "OK");
+		}
+	}
 }

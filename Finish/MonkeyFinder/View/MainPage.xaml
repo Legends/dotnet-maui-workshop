@@ -75,7 +75,7 @@
             Text="Get Monkeys" />
 
         <!--  Add this  -->
-        <Button
+        <Button IsVisible="{OnPlatform iOS=True, Android=True, WinUI=False, MacCatalyst=False}"
             Grid.Row="1"
             Grid.Column="1"
             Margin="8"

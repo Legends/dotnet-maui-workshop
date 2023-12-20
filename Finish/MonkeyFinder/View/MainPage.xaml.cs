@@ -19,11 +19,14 @@ public partial class MainPage : ContentPage
 		{
 			Dispatcher.Dispatch(() =>
 			{
-				ToolbarItems.Add(new ToolbarItem("REFRESH", null, () =>
+				if (ToolbarItems.Count == 0)
 				{
-					// Handle Windows toolbar item click
-					vm.GetMonkeysCommand.Execute(null);
-				}));
+					ToolbarItems.Add(new ToolbarItem("REFRESH", null, () =>
+					{
+						// Handle Windows toolbar item click
+						vm.GetMonkeysCommand.Execute(null);
+					}));
+				}
 			});
 		}
 	}

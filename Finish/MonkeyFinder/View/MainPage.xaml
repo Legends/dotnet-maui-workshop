@@ -44,6 +44,7 @@
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:MonkeysViewModel}}, Path=GoToDetailsCommand}"
                                                 CommandParameter="{Binding .}"/>
                                 </Frame.GestureRecognizers>
+
                                 <Grid Padding="0" ColumnDefinitions="125,*">
                                     <Image
                                                 Aspect="AspectFill"
@@ -74,8 +75,9 @@
             Style="{StaticResource ButtonOutline}"
             Text="Get Monkeys" />
 
-        <!--  Add this  -->
-        <Button IsVisible="{OnPlatform iOS=True, Android=True, WinUI=False, MacCatalyst=False}"
+        <!--  Add this:   -->
+        <Button 
+            IsVisible="{OnPlatform iOS=True, Android=True, WinUI=False, MacCatalyst=False}"
             Grid.Row="1"
             Grid.Column="1"
             Margin="8"
@@ -83,7 +85,6 @@
             IsEnabled="{Binding IsNotBusy}"
             Style="{StaticResource ButtonOutline}"
             Text="Find Closest" />
-
 
         <ActivityIndicator
             Grid.RowSpan="2"

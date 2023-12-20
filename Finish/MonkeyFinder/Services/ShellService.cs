@@ -16,6 +16,15 @@ namespace MonkeyFinder.Services
 	{
 		public ShellService() { }
 
+		/// <summary>
+		/// You could also trigger an event from your viewmodel to which ur code-behind class has subscribed to 
+		/// and handle the `showUserMessageToUser` there!
+		/// </summary>
+		/// <param name="titel"></param>
+		/// <param name="msg"></param>
+		/// <param name="ok"></param>
+		/// <param name="cancel"></param>
+		/// <returns></returns>
 		public async Task ShowMessage(string titel, string msg, string ok, string cancel = null)
 		{
 

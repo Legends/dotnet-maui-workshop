@@ -1,4 +1,6 @@
-﻿using MonkeyFinder.Services;
+﻿using Microsoft.Extensions.Logging;
+using MonkeyFinder.Interfaces;
+using MonkeyFinder.Services;
 
 namespace MonkeyFinder.ViewModel;
 
@@ -9,17 +11,25 @@ public partial class MonkeysViewModel : BaseViewModel
 	IConnectivity connectivity;
 	IGeolocation geolocation;
 	IShellService shellService;
+	private readonly IPlatformSpecificService _platformService;
+	ILogger<MonkeysViewModel> logger;
 
 	public MonkeysViewModel(MonkeyService monkeyService,
 							IConnectivity connectivity,
 							IGeolocation geolocation,
-							IShellService shellService)
+							IShellService shellSvc,
+							IPlatformSpecificService platformService,
+							ILogger<MonkeysViewModel> svcLogger)
 	{
+		_platformService = platformService;
 		Title = "Monkey Finder";
 		this.monkeyService = monkeyService;
 		this.connectivity = connectivity;
 		this.geolocation = geolocation;
-		this.shellService = shellService;
+		this.shellService = shellSvc;
+		logger = svcLogger;
+
+		_platformService.DoSomething();
 	}
 
 	[RelayCommand]
@@ -28,7 +38,20 @@ public partial class MonkeysViewModel : BaseViewModel
 		if (monkey == null)
 			return;
 
-		await this.shellService.GoToAsync<DetailsPage>("Monkey", monkey);
+		try
+		{
+		//	await Shell.Current.GoToAsync($"{nameof(DetailsPage)}", true, new Dictionary<string, object>
+		//{
+		//	{"Monkey",monkey }
+		//});
+			await this.shellService.GoToAsync<DetailsPage>("Monkey", monkey);
+		}
+		catch (Exception ex)
+		{
+			logger.LogError($"Error: {ex.Message}");
+			await shellService.ShowMessage("Error!", ex.Message, "OK");
+		}
+
 	}
 
 	[ObservableProperty]
@@ -48,8 +71,8 @@ public partial class MonkeysViewModel : BaseViewModel
 		{
 			if (connectivity.NetworkAccess != NetworkAccess.Internet)
 			{
-				await shellService.ShowMessage("No connectivity!",
-					$"Please check internet and try again.", "OK");
+
+				await shellService.ShowMessage("No connectivity!", $"Please check internet and try again.", "OK");
 				return;
 			}
 
@@ -65,7 +88,7 @@ public partial class MonkeysViewModel : BaseViewModel
 		}
 		catch (Exception ex)
 		{
-			Debug.WriteLine($"Unable to get monkeys: {ex.Message}");
+			logger.LogError($"Unable to get monkeys: {ex.Message}");
 			await shellService.ShowMessage("Error!", ex.Message, "OK");
 		}
 		finally
@@ -105,7 +128,7 @@ public partial class MonkeysViewModel : BaseViewModel
 		}
 		catch (Exception ex)
 		{
-			Debug.WriteLine($"Unable to query location: {ex.Message}");
+			logger.LogError($"Unable to query location: {ex.Message}");
 			await shellService.ShowMessage("Error!", ex.Message, "OK");
 		}
 	}

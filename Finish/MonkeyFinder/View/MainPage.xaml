@@ -9,13 +9,9 @@
     ios:Page.UseSafeArea="True"
     Title="Monkeys"
     x:DataType="viewmodel:MonkeysViewModel">
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="blasen">
-            <ToolbarItem.IsEnabled>
-                True
-            </ToolbarItem.IsEnabled>
-        </ToolbarItem>
-    </ContentPage.ToolbarItems>
+    <!--<ContentPage.ToolbarItems>
+       
+    </ContentPage.ToolbarItems>-->
     <Grid
         ColumnDefinitions="*,*"
         ColumnSpacing="5"
